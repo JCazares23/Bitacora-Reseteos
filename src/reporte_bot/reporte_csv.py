@@ -1,38 +1,28 @@
-"""Escritura del reporte CSV sin repetir operaciones ya registradas."""
+"""Escritura del reporte CSV sin repetir filas ya registradas."""
 
 import csv
 from collections.abc import Iterable
-from dataclasses import asdict
 from pathlib import Path
 
-from reporte_bot.reseteos import ReseteoExitoso
-
-COLUMNAS_REPORTE = (
-    "operation_id",
-    "fecha_solicitud_utc",
-    "fecha_reseteo_utc",
-    "usuario_solicitante",
-    "usuario_reseteado",
-    "estado",
-    "archivo_origen",
-)
+from reporte_bot.resetuser import COLUMNAS_REPORTE, RegistroResetUser
 
 
 def actualizar_reporte(
-    ruta_csv: str | Path, reseteos: Iterable[ReseteoExitoso]
+    ruta_csv: str | Path, registros: Iterable[RegistroResetUser]
 ) -> int:
-    """Agrega solo reseteos nuevos y devuelve cuántas filas escribió."""
+    """Agrega solo filas nuevas y devuelve cuántas escribió."""
     ruta = Path(ruta_csv)
-    operation_ids_existentes = _leer_operation_ids(ruta)
-    reseteos_nuevos: list[ReseteoExitoso] = []
+    claves_existentes = _leer_claves(ruta)
+    registros_nuevos: list[RegistroResetUser] = []
 
-    for reseteo in reseteos:
-        if reseteo.operation_id not in operation_ids_existentes:
-            reseteos_nuevos.append(reseteo)
-            operation_ids_existentes.add(reseteo.operation_id)
+    for registro in registros:
+        clave = _crear_clave(registro.como_fila())
+        if clave not in claves_existentes:
+            registros_nuevos.append(registro)
+            claves_existentes.add(clave)
 
     debe_escribir_encabezado = not ruta.exists() or ruta.stat().st_size == 0
-    if not reseteos_nuevos and not debe_escribir_encabezado:
+    if not registros_nuevos and not debe_escribir_encabezado:
         return 0
 
     ruta.parent.mkdir(parents=True, exist_ok=True)
@@ -40,20 +30,26 @@ def actualizar_reporte(
         escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS_REPORTE)
         if debe_escribir_encabezado:
             escritor.writeheader()
-        escritor.writerows(asdict(reseteo) for reseteo in reseteos_nuevos)
+        escritor.writerows(registro.como_fila() for registro in registros_nuevos)
 
-    return len(reseteos_nuevos)
+    return len(registros_nuevos)
 
 
-def _leer_operation_ids(ruta_csv: Path) -> set[str]:
-    """Lee las operaciones ya guardadas para no escribirlas otra vez."""
+def _leer_claves(ruta_csv: Path) -> set[tuple[str, ...]]:
+    """Lee las filas existentes para no escribirlas otra vez."""
     if not ruta_csv.exists() or ruta_csv.stat().st_size == 0:
         return set()
 
     with ruta_csv.open(newline="", encoding="utf-8") as archivo:
         lector = csv.DictReader(archivo)
-        return {
-            fila["operation_id"]
-            for fila in lector
-            if fila.get("operation_id")
-        }
+        if tuple(lector.fieldnames or ()) != COLUMNAS_REPORTE:
+            raise ValueError(
+                "El CSV existente usa un encabezado anterior. "
+                "Elimínelo y vuelva a procesar los logs."
+            )
+        return {_crear_clave(fila) for fila in lector}
+
+
+def _crear_clave(fila: dict[str, str | None]) -> tuple[str, ...]:
+    """Usa todos los campos del reporte como identificador de una fila."""
+    return tuple(fila.get(columna) or "" for columna in COLUMNAS_REPORTE)
