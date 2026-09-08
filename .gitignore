@@ -1,0 +1,20 @@
+# Datos de entrada y resultados: no deben publicarse en GitHub.
+data/raw/*
+data/output/*
+!data/raw/.gitkeep
+!data/output/.gitkeep
+*.log
+*.pdf
+
+# Entorno y archivos generados por Python.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Archivos locales del sistema/editor.
+.DS_Store
+Thumbs.db
+.vscode/
+
