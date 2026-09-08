@@ -60,6 +60,12 @@ $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m reporte_bot --fecha 2026-09-01
 ```
 
+En Linux, con `uv` instalado, el equivalente es:
+
+```bash
+PYTHONPATH=src uv run python -m reporte_bot --fecha 2026-09-01
+```
+
 El comando busca `data/input/2026-09-01.log` y actualiza
 `data/output/tabla_reporte_bot.csv`. Si se vuelve a ejecutar con el mismo log,
 no agrega filas repetidas.
