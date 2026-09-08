@@ -1,20 +1,72 @@
 # Bitácora de Reseteos
 
-Proyecto para transformar los logs diarios del bot de reseteo de usuarios en
-un reporte CSV claro, histórico e idempotente.
+Proyecto para transformar los logs diarios del bot de reseteo de usuarios en un
+reporte CSV claro, histórico e idempotente.
 
 ## Objetivo
 
 Para una fecha dada, el programa leerá el archivo de log correspondiente,
 identificará los reseteos de usuarios gestionados por ADManager y actualizará
-un reporte CSV sin duplicar registros.
+`data/output/tabla_reporte_bot.csv` sin duplicar registros.
+
+## Contrato del reporte
+
+El archivo generado será `data/output/tabla_reporte_bot.csv`. Cada fila
+representará un reseteo completado correctamente, no cada línea del log.
+
+| Columna | Origen en el log | Motivo |
+|---|---|---|
+| `operation_id` | `[operation_Id=...]` | Es el identificador único de la operación y evita duplicados. |
+| `fecha_solicitud_utc` | Evento `HTTP Request` a `resetuser` | Indica cuándo el bot recibió la solicitud. |
+| `fecha_reseteo_utc` | Respuesta de ADManager exitosa | Indica cuándo ADManager confirmó el reseteo. |
+| `usuario_solicitante` | `sAMAccountName_requester` de la solicitud | Identifica quién solicitó el reseteo. |
+| `usuario_reseteado` | `sAMAccountName` de la respuesta de ADManager | Identifica al usuario que ADManager confirmó haber reseteado. |
+| `estado` | Regla del proceso | Tendrá el valor `exitoso`; hace explícito el resultado de la fila. |
+| `archivo_origen` | Nombre del archivo procesado | Permite rastrear de qué log salió el registro. |
+
+### Regla para considerar un reseteo exitoso
+
+Una operación se incluirá solamente si, bajo el mismo `operation_Id`, aparece
+una respuesta de ADManager con los tres indicadores siguientes:
+
+```text
+'reset': 'yes'
+'statusMessage': 'Password reset successful.'
+'status': '1'
+```
+
+Las operaciones con errores HTTP, respuestas incompletas o incidencias creadas
+por el bot no generarán una fila. Esto evita reportar una solicitud como si se
+hubiera completado.
+
+### Idempotencia
+
+Antes de añadir una fila, el programa comparará su `operation_id` contra los
+que ya existen en el CSV. Si ya existe, no la volverá a escribir. Por tanto,
+procesar el mismo archivo más de una vez conserva el mismo reporte.
+
+## Alcance de la primera versión
+
+- Procesar archivos `.log` ubicados en `data/raw/`.
+- Generar y actualizar un único CSV en `data/output/`.
+- Reportar únicamente reseteos exitosos de ADManager.
+
+No se incluirán todavía una base de datos, interfaz gráfica, envío de correos
+ni un reporte de errores separado. Podrán añadirse después si son necesarios.
+
+## Estado actual
+
+Los logs de ejemplo ya fueron ubicados en `data/raw/`, se validó el criterio
+de éxito, se creó el lector y se implementó la extracción de reseteos exitosos.
+También se creó el escritor idempotente del CSV. El siguiente paso es unir las
+piezas en un comando que procese un archivo de log completo.
 
 ## Estructura
 
 ```text
 src/reporte_bot/  # Código fuente del programa.
 tests/            # Pruebas automatizadas.
-data/raw/         # Logs de entrada.
-data/output/      # CSV generado.
-notebooks/        # Exploración previa de los datos.
+data/raw/         # Logs de entrada (ignorados por Git).
+data/output/      # CSV generado (ignorado por Git).
+notebooks/        # Exploración opcional; no ejecuta el proceso principal.
 ```
