@@ -106,10 +106,3 @@ PYTHONPATH=src uv run python -m unittest discover -s tests -v
 ```
 
 Las pruebas cubren la normalizacion de texto, la lectura de logs, la informacion de ADManager, las reglas de `resetuser`, la escritura idempotente del CSV y la ejecucion completa desde la linea de comandos.
-
-## Decisiones principales
-
-- Los logs y el CSV generado estan ignorados por Git porque pueden contener datos sensibles y se regeneran localmente.
-- Las comparaciones de texto se hacen sin mayusculas ni signos diacriticos para evitar diferencias por formato.
-- Las reglas de `resetuser` estan separadas del resto del pipeline para que sean mas faciles de revisar y ampliar.
-- El encabezado del CSV se valida antes de agregar datos para evitar mezclar reportes con una estructura distinta.

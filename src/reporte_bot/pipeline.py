@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
+from reporte_bot.acciones import procesar_operacion
 from reporte_bot.lector_logs import agrupar_por_operacion, leer_eventos
 from reporte_bot.reporte_csv import actualizar_reporte
-from reporte_bot.resetuser import extraer_registro
 
 
 def procesar_archivo(ruta_log: str | Path, ruta_csv: str | Path) -> int:
@@ -14,7 +14,7 @@ def procesar_archivo(ruta_log: str | Path, ruta_csv: str | Path) -> int:
     registros = []
 
     for eventos in operaciones.values():
-        registro = extraer_registro(eventos)
+        registro = procesar_operacion(eventos)
         if registro:
             registros.append(registro)
 
