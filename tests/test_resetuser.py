@@ -2,6 +2,7 @@
 
 import sys
 import unittest
+from json import dumps
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -27,6 +28,42 @@ def crear_eventos(codigo: str, detalle: str = "") -> list[EventoLog]:
             nivel="INFO",
             operation_id="operacion-1",
             mensaje=detalle,
+        ),
+    ]
+
+
+def crear_perfil(
+    usuario: str,
+    oficina: str = "001",
+    descripcion: str = "Administrador",
+    ou_name: str = "OAT/Tiendas",
+) -> list[EventoLog]:
+    """Crea la busqueda y la respuesta de ADManager para un usuario."""
+    respuesta = {
+        "UsersList": [
+            {
+                "FIRST_NAME": "Nombre",
+                "LAST_NAME": usuario,
+                "SAM_ACCOUNT_NAME": usuario,
+                "OFFICE": oficina,
+                "DESCRIPTION": descripcion,
+                "OU_NAME": ou_name,
+            }
+        ]
+    }
+    return [
+        EventoLog(
+            fecha_utc="2026-08-29T12:00:01Z",
+            nivel="INFO",
+            operation_id="operacion-1",
+            mensaje="HTTP Request: GET SearchUser?filter="
+            f"%28sAMAccountName%3Aequal%3A{usuario}%29",
+        ),
+        EventoLog(
+            fecha_utc="2026-08-29T12:00:02Z",
+            nivel="INFO",
+            operation_id="operacion-1",
+            mensaje=f"Raw Response: {dumps(respuesta)}",
         ),
     ]
 
@@ -67,3 +104,54 @@ class ResetUserTests(unittest.TestCase):
 
         assert registro is not None
         self.assertIn("No such user matched", registro.resultado)
+
+    def test_403_explica_oficinas_distintas(self) -> None:
+        eventos = crear_eventos("403") + crear_perfil("administrador")
+        eventos += crear_perfil("usuario", oficina="002")
+
+        registro = extraer_registro(eventos)
+
+        assert registro is not None
+        self.assertIn("misma oficina", registro.resultado)
+
+    def test_403_explica_solicitante_sin_permiso(self) -> None:
+        eventos = crear_eventos("403")
+        eventos += crear_perfil("administrador", descripcion="Empleado")
+        eventos += crear_perfil("usuario")
+
+        registro = extraer_registro(eventos)
+
+        assert registro is not None
+        self.assertIn("no tiene permisos", registro.resultado)
+
+    def test_403_explica_ou_restringida(self) -> None:
+        eventos = crear_eventos("403")
+        eventos += crear_perfil("administrador", descripcion="Gerente")
+        eventos += crear_perfil("usuario", ou_name="OAT/Cedis/BY")
+
+        registro = extraer_registro(eventos)
+
+        assert registro is not None
+        self.assertIn("OAT/Cedis/BY", registro.resultado)
+
+    def test_404_explica_cuando_no_existe_ningun_usuario(self) -> None:
+        registro = extraer_registro(crear_eventos("404"))
+
+        assert registro is not None
+        self.assertIn("Ningun usuario", registro.resultado)
+
+    def test_404_explica_cuando_no_existe_el_solicitante(self) -> None:
+        eventos = crear_eventos("404") + crear_perfil("usuario")
+
+        registro = extraer_registro(eventos)
+
+        assert registro is not None
+        self.assertIn("solicitante no se encontro", registro.resultado)
+
+    def test_404_explica_cuando_no_existe_el_usuario_objetivo(self) -> None:
+        eventos = crear_eventos("404") + crear_perfil("administrador")
+
+        registro = extraer_registro(eventos)
+
+        assert registro is not None
+        self.assertIn("objetivo no se encontro", registro.resultado)
