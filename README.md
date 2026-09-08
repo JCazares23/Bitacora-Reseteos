@@ -6,28 +6,28 @@ reporte CSV claro, histórico e idempotente.
 ## Objetivo
 
 Para una fecha dada, el programa leerá el archivo de log correspondiente,
-identificará los reseteos de usuarios gestionados por ADManager y actualizará
-`data/output/tabla_reporte_bot.csv` sin duplicar registros.
+identificará todas las llamadas al endpoint `users_admin/resetuser` y
+actualizará `data/output/tabla_reporte_bot.csv` sin duplicar registros.
 
 ## Contrato del reporte
 
 El archivo generado será `data/output/tabla_reporte_bot.csv`. Cada fila
-representará un reseteo completado correctamente, no cada línea del log.
+representa una llamada a `resetuser`, exitosa o no, nunca una línea aislada.
 
 | Columna | Origen en el log | Motivo |
 |---|---|---|
-| `operation_id` | `[operation_Id=...]` | Es el identificador único de la operación y evita duplicados. |
-| `fecha_solicitud_utc` | Evento `HTTP Request` a `resetuser` | Indica cuándo el bot recibió la solicitud. |
-| `fecha_reseteo_utc` | Respuesta de ADManager exitosa | Indica cuándo ADManager confirmó el reseteo. |
-| `usuario_solicitante` | `sAMAccountName_requester` de la solicitud | Identifica quién solicitó el reseteo. |
-| `usuario_reseteado` | `sAMAccountName` de la respuesta de ADManager | Identifica al usuario que ADManager confirmó haber reseteado. |
-| `estado` | Regla del proceso | Tendrá el valor `exitoso`; hace explícito el resultado de la fila. |
-| `archivo_origen` | Nombre del archivo procesado | Permite rastrear de qué log salió el registro. |
+| `timestamp` | Solicitud a `resetuser` | Momento de la operación. |
+| `solicitante` y `target` | Parámetros de la solicitud | Usuarios involucrados. |
+| `acción` y `sistema` | Regla del proceso | `reseteo de contraseña` y `ADManager`. |
+| Nombres completos y oficinas | Perfiles de ADManager | Contexto de ambos usuarios. |
+| `resultado` | Código y respuesta de ADManager | Mensaje humano del resultado final. |
 
 ### Regla para considerar un reseteo exitoso
 
-Una operación se incluirá solamente si, bajo el mismo `operation_Id`, aparece
-una respuesta de ADManager con los tres indicadores siguientes:
+El resultado se interpreta con el código retornado por `resetuser` y la
+respuesta de ADManager. Por ejemplo, 404 identifica cuál usuario no existe,
+403 explica la regla de permisos, 503 conserva el detalle de ADManager y 504
+indica un timeout. El código HTTP no aparece como resultado final.
 
 ```text
 'reset': 'yes'
@@ -35,19 +35,16 @@ una respuesta de ADManager con los tres indicadores siguientes:
 'status': '1'
 ```
 
-Las operaciones con errores HTTP, respuestas incompletas o incidencias creadas
-por el bot no generarán una fila. Esto evita reportar una solicitud como si se
-hubiera completado.
+El resultado exitoso se confirma con las tres marcas siguientes:
 
 ### Idempotencia
 
-Antes de añadir una fila, el programa comparará su `operation_id` contra los
-que ya existen en el CSV. Si ya existe, no la volverá a escribir. Por tanto,
-procesar el mismo archivo más de una vez conserva el mismo reporte.
+Antes de añadir una fila, el programa compara todos sus campos contra los que
+ya existen en el CSV. Si ya existe, no la vuelve a escribir.
 
 ## Alcance de la primera versión
 
-- Procesar archivos `.log` ubicados en `data/raw/`.
+- Procesar archivos `.log` ubicados en `data/input/`.
 - Generar y actualizar un único CSV en `data/output/`.
 - Reportar únicamente reseteos exitosos de ADManager.
 
@@ -63,7 +60,7 @@ $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m reporte_bot --fecha 2026-09-01
 ```
 
-El comando busca `data/raw/2026-09-01.log` y actualiza
+El comando busca `data/input/2026-09-01.log` y actualiza
 `data/output/tabla_reporte_bot.csv`. Si se vuelve a ejecutar con el mismo log,
 no agrega filas repetidas.
 
@@ -79,17 +76,16 @@ $env:PYTHONPATH = "src"
 
 ## Estado actual
 
-Los logs de ejemplo ya fueron ubicados en `data/raw/`, se validó el criterio
-de éxito, se creó el lector y se implementó la extracción de reseteos exitosos.
-También se creó el escritor idempotente del CSV y la CLI que procesa un archivo
-completo por fecha. La primera versión del proyecto ya cumple su objetivo.
+Los logs de ejemplo ya fueron ubicados en `data/input/`. La CLI procesa todos
+los resultados de `resetuser`, traduce las reglas de ADManager y actualiza el
+CSV idempotente por fecha.
 
 ## Estructura
 
 ```text
 src/reporte_bot/  # Código fuente del programa.
 tests/            # Pruebas automatizadas.
-data/raw/         # Logs de entrada (ignorados por Git).
+data/input/       # Logs de entrada (ignorados por Git).
 data/output/      # CSV generado (ignorado por Git).
 notebooks/        # Exploración opcional; no ejecuta el proceso principal.
 ```
