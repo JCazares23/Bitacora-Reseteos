@@ -1,4 +1,4 @@
-"""Pruebas para guardar el reporte con el contrato final."""
+"""Pruebas para guardar el reporte con la especificacion final."""
 
 import csv
 import sys
@@ -18,16 +18,16 @@ def crear_registro(timestamp: str) -> RegistroResetUser:
         timestamp=timestamp,
         solicitante="administrador",
         target="usuario",
-        nombre_solicitante="Ana López",
-        nombre_target="Luis Pérez",
+        nombre_solicitante="Ana Lopez",
+        nombre_target="Luis Perez",
         oficina_solicitante="001",
         oficina_target="001",
-        resultado="El reseteo de contraseña se realizó correctamente en ADManager.",
+        resultado="El reseteo de contrasena se realizo correctamente en ADManager.",
     )
 
 
 class ReporteCsvTests(unittest.TestCase):
-    """Comprueba que el CSV conserva una sola fila por operación."""
+    """Comprueba que el CSV conserva una sola fila por operacion."""
 
     def test_agrega_solo_filas_nuevas(self) -> None:
         primer_registro = crear_registro("2026-08-29T12:00:00Z")
@@ -46,5 +46,5 @@ class ReporteCsvTests(unittest.TestCase):
         self.assertEqual(primera_ejecucion, 1)
         self.assertEqual(segunda_ejecucion, 1)
         self.assertEqual(len(filas), 2)
-        self.assertEqual(filas[0]["acción"], "reseteo de contraseña")
+        self.assertEqual(filas[0]["accion"], "reseteo de contrasena")
         self.assertEqual(filas[0]["resultado"], primer_registro.resultado)

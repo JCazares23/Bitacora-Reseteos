@@ -1,4 +1,4 @@
-"""Pruebas que confirman cómo se leen y agrupan los logs."""
+"""Pruebas que confirman como se leen y agrupan los logs."""
 
 import sys
 import unittest
@@ -11,7 +11,7 @@ from reporte_bot.lector_logs import agrupar_por_operacion, leer_eventos
 
 
 class LectorLogsTests(unittest.TestCase):
-    """Comprueba el comportamiento básico del lector de logs."""
+    """Comprueba el comportamiento basico del lector de logs."""
 
     def test_lee_y_agrupa_eventos_de_la_misma_operacion(self) -> None:
         contenido = (

@@ -27,7 +27,7 @@ class ADManagerTests(unittest.TestCase):
                 nivel="INFO",
                 operation_id="operacion-1",
                 mensaje="Raw Response: {\"UsersList\":[{"
-                "\"FIRST_NAME\":\"Ana\",\"LAST_NAME\":\"López\","
+                "\"FIRST_NAME\":\"Ana\",\"LAST_NAME\":\"Lopez\","
                 "\"SAM_ACCOUNT_NAME\":\"Administrador\","
                 "\"OFFICE\":\"001\","
                 "\"DESCRIPTION\":\"Administrador de sistemas\","
@@ -38,6 +38,6 @@ class ADManagerTests(unittest.TestCase):
         usuarios = obtener_usuarios(eventos)
 
         usuario = usuarios["administrador"]
-        self.assertEqual(usuario.nombre_completo, "Ana López")
+        self.assertEqual(usuario.nombre_completo, "Ana Lopez")
         self.assertEqual(usuario.oficina, "001")
         self.assertEqual(usuario.descripcion, "Administrador de sistemas")

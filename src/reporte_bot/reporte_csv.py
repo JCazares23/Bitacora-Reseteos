@@ -10,7 +10,7 @@ from reporte_bot.resetuser import COLUMNAS_REPORTE, RegistroResetUser
 def actualizar_reporte(
     ruta_csv: str | Path, registros: Iterable[RegistroResetUser]
 ) -> int:
-    """Agrega solo filas nuevas y devuelve cuántas escribió."""
+    """Agrega solo filas nuevas y devuelve cuantas escribio."""
     ruta = Path(ruta_csv)
     claves_existentes = _leer_claves(ruta)
     registros_nuevos: list[RegistroResetUser] = []
@@ -45,7 +45,7 @@ def _leer_claves(ruta_csv: Path) -> set[tuple[str, ...]]:
         if tuple(lector.fieldnames or ()) != COLUMNAS_REPORTE:
             raise ValueError(
                 "El CSV existente usa un encabezado anterior. "
-                "Elimínelo y vuelva a procesar los logs."
+                "Eliminelo y vuelva a procesar los logs."
             )
         return {_crear_clave(fila) for fila in lector}
 

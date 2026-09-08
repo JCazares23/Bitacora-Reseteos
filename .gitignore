@@ -18,6 +18,6 @@ __pycache__/
 Thumbs.db
 .vscode/
 
-# Bitácora local de aprendizaje: no se publica en Git.
+# Bitacora local de aprendizaje: no se publica en Git.
 ex.md
 

@@ -13,7 +13,7 @@ PATRON_EVENTO = re.compile(
 
 @dataclass(frozen=True)
 class EventoLog:
-    """Representa un mensaje del log asociado a una operación del bot."""
+    """Representa un mensaje del log asociado a una operacion del bot."""
 
     fecha_utc: str
     nivel: str
@@ -22,10 +22,10 @@ class EventoLog:
 
 
 def leer_eventos(ruta: str | Path) -> list[EventoLog]:
-    """Lee un log y devuelve los eventos asociados a una operación.
+    """Lee un log y devuelve los eventos asociados a una operacion.
 
-    Algunas respuestas de ADManager continúan en la línea siguiente. Esas
-    líneas se unen al mensaje anterior para no perder información.
+    Algunas respuestas de ADManager continuan en la linea siguiente. Esas
+    lineas se unen al mensaje anterior para no perder informacion.
     """
     eventos: list[EventoLog] = []
     evento_actual: dict[str, str] | None = None
@@ -57,7 +57,7 @@ def leer_eventos(ruta: str | Path) -> list[EventoLog]:
 def agrupar_por_operacion(
     eventos: Iterable[EventoLog],
 ) -> dict[str, list[EventoLog]]:
-    """Reúne los eventos de cada operación sin cambiar su orden original."""
+    """Reune los eventos de cada operacion sin cambiar su orden original."""
     operaciones: dict[str, list[EventoLog]] = {}
 
     for evento in eventos:

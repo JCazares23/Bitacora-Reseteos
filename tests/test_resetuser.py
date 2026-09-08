@@ -11,7 +11,7 @@ from reporte_bot.resetuser import extraer_registro
 
 
 def crear_eventos(codigo: str, detalle: str = "") -> list[EventoLog]:
-    """Crea una operación mínima para probar cada resultado."""
+    """Crea una operacion minima para probar cada resultado."""
     return [
         EventoLog(
             fecha_utc="2026-08-29T12:00:00Z",
@@ -32,7 +32,7 @@ def crear_eventos(codigo: str, detalle: str = "") -> list[EventoLog]:
 
 
 class ResetUserTests(unittest.TestCase):
-    """Comprueba los mensajes informativos de cada código del endpoint."""
+    """Comprueba los mensajes informativos de cada codigo del endpoint."""
 
     def test_crea_las_columnas_de_un_reseteo_exitoso(self) -> None:
         registro = extraer_registro(crear_eventos("200"))
@@ -40,7 +40,7 @@ class ResetUserTests(unittest.TestCase):
         assert registro is not None
         fila = registro.como_fila()
         self.assertEqual(fila["timestamp"], "2026-08-29T12:00:00Z")
-        self.assertEqual(fila["acción"], "reseteo de contraseña")
+        self.assertEqual(fila["accion"], "reseteo de contrasena")
         self.assertIn("correctamente", fila["resultado"])
 
     def test_traduce_los_codigos_generales_a_mensajes_humanos(self) -> None:

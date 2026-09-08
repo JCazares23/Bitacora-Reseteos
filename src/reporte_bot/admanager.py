@@ -25,7 +25,7 @@ class UsuarioADManager:
 
 
 def obtener_usuarios(eventos: Iterable[EventoLog]) -> dict[str, UsuarioADManager]:
-    """Relaciona cada búsqueda de usuario con su respuesta de ADManager."""
+    """Relaciona cada busqueda de usuario con su respuesta de ADManager."""
     usuarios: dict[str, UsuarioADManager] = {}
     usuario_buscado: str | None = None
 
@@ -47,7 +47,7 @@ def obtener_usuarios(eventos: Iterable[EventoLog]) -> dict[str, UsuarioADManager
 
 
 def _extraer_respuesta(mensaje: str) -> dict[str, object] | None:
-    """Convierte el JSON que aparece después de ``Raw Response``."""
+    """Convierte el JSON que aparece despues de ``Raw Response``."""
     if "Raw Response: {" not in mensaje:
         return None
 

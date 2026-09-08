@@ -1,4 +1,4 @@
-"""Orquestación del proceso completo para un archivo de log."""
+"""Orquestacion del proceso completo para un archivo de log."""
 
 from pathlib import Path
 

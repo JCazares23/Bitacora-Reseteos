@@ -1,78 +1,96 @@
-# Bitácora de Reseteos
+# Reporte de reseteos de ADManager
 
-Proyecto para transformar los logs diarios del bot de reseteo de usuarios en un
-reporte CSV claro, histórico e idempotente.
+## Intencion del repositorio
 
-## Objetivo
+Este proyecto convierte los logs diarios del bot de soporte en un reporte CSV de los intentos de reseteo de contrasena realizados mediante ADManager.
 
-Para una fecha dada, el programa leerá el archivo de log correspondiente,
-identificará todas las llamadas al endpoint `users_admin/resetuser` y
-actualizará `data/output/tabla_reporte_bot.csv` sin duplicar registros.
+Por ahora solo procesa la accion `users_admin/resetuser`, pero el codigo esta separado por modulos para que en el futuro se puedan agregar nuevas acciones sin rehacer el proceso completo.
 
-## Contrato del reporte
+El reporte se puede ejecutar mas de una vez para una misma fecha. Si el archivo de entrada no cambia, el CSV final tampoco cambia. Si un log historico se corrige, al ejecutarlo de nuevo solo se agregan registros que aun no existian en el reporte.
 
-El archivo generado será `data/output/tabla_reporte_bot.csv`. Cada fila
-representa una llamada a `resetuser`, exitosa o no, nunca una línea aislada.
-
-| Columna | Origen en el log | Motivo |
-|---|---|---|
-| `timestamp` | Solicitud a `resetuser` | Momento de la operación. |
-| `solicitante` y `target` | Parámetros de la solicitud | Usuarios involucrados. |
-| `acción` y `sistema` | Regla del proceso | `reseteo de contraseña` y `ADManager`. |
-| Nombres completos y oficinas | Perfiles de ADManager | Contexto de ambos usuarios. |
-| `resultado` | Código y respuesta de ADManager | Mensaje humano del resultado final. |
-
-### Regla para considerar un reseteo exitoso
-
-El resultado se interpreta con el código retornado por `resetuser` y la
-respuesta de ADManager. Por ejemplo, 404 identifica cuál usuario no existe,
-403 explica la regla de permisos, 503 conserva el detalle de ADManager y 504
-indica un timeout. El código HTTP no aparece como resultado final.
+## Estructura del proyecto
 
 ```text
-'reset': 'yes'
-'statusMessage': 'Password reset successful.'
-'status': '1'
+src/
+  reporte_bot/
+    __main__.py       # Punto de entrada de la linea de comandos
+    pipeline.py       # Coordina la lectura, reglas y escritura
+    lector_logs.py    # Lee el log y agrupa eventos por operacion
+    admanager.py      # Extrae datos utiles de las respuestas de ADManager
+    resetuser.py      # Convierte una operacion resetuser en una fila del reporte
+    reporte_csv.py    # Valida, combina y guarda el CSV sin duplicados
+    texto.py          # Normaliza texto antes de compararlo
+tests/                # Pruebas unitarias y de integracion
+notebooks/            # Exploracion manual de ejemplos de logs
+data/input/           # Logs diarios de entrada, no se suben al repositorio
+data/output/          # Reporte generado, no se sube al repositorio
 ```
 
-El resultado exitoso se confirma con las tres marcas siguientes:
+El notebook es solo material de exploracion. El proceso real se ejecuta desde la linea de comandos.
 
-### Idempotencia
+## Instalacion
 
-Antes de añadir una fila, el programa compara todos sus campos contra los que
-ya existen en el CSV. Si ya existe, no la vuelve a escribir.
+Se necesita tener [uv](https://docs.astral.sh/uv/) instalado. Desde la raiz del repositorio ejecuta:
 
-## Alcance de la primera versión
+```powershell
+uv sync
+```
 
-- Procesar archivos `.log` ubicados en `data/input/`.
-- Generar y actualizar un único CSV en `data/output/`.
-- Reportar únicamente reseteos exitosos de ADManager.
+El comando crea el entorno virtual e instala las dependencias del proyecto.
 
-No se incluirán todavía una base de datos, interfaz gráfica, envío de correos
-ni un reporte de errores separado. Podrán añadirse después si son necesarios.
+## Preparar un log
 
-## Uso
+Guarda el log que deseas procesar dentro de `data/input/` con este formato de nombre:
 
-Desde la raíz del proyecto, indique la fecha del archivo que desea procesar:
+```text
+AAAA-MM-DD.log
+```
+
+Por ejemplo, para procesar el 1 de septiembre de 2026, el archivo debe llamarse `data/input/2026-09-01.log`.
+
+## Ejecutar el reporte
+
+En Windows PowerShell:
 
 ```powershell
 $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m reporte_bot --fecha 2026-09-01
 ```
 
-En Linux, con `uv` instalado, el equivalente es:
+En Linux o macOS:
 
 ```bash
 PYTHONPATH=src uv run python -m reporte_bot --fecha 2026-09-01
 ```
 
-El comando busca `data/input/2026-09-01.log` y actualiza
-`data/output/tabla_reporte_bot.csv`. Si se vuelve a ejecutar con el mismo log,
-no agrega filas repetidas.
+El resultado se guarda en `data/output/tabla_reporte_bot.csv`. La fecha es obligatoria para que quede claro que log se esta procesando.
 
-## Pruebas
+## Especificacion del reporte
 
-Para comprobar el código y su formato:
+El CSV final contiene estas columnas:
+
+```text
+timestamp
+solicitante
+target
+accion
+sistema
+nombre completo del usuario solicitante
+nombre completo del usuario target
+oficina del usuario solicitante
+oficina del usuario target
+resultado
+```
+
+La columna `resultado` usa mensajes entendibles para una persona. El proyecto interpreta los codigos de respuesta del bot y los datos encontrados en ADManager para explicar si el reseteo fue exitoso, si faltaba algun usuario, si no habia permisos, si hubo limite de intentos o si ocurrio otro problema.
+
+## Por que no se duplican filas
+
+Antes de escribir el reporte, el programa compara cada fila nueva con las que ya existen en el CSV. Una fila identica se conserva una sola vez. Esto permite repetir una ejecucion sin alterar el resultado y recuperar informacion nueva al reprocesar un log corregido.
+
+## Pruebas y revision de codigo
+
+Las pruebas usan datos de ejemplo, nunca los logs reales. Para ejecutarlas en Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\ruff.exe check src tests
@@ -80,18 +98,18 @@ $env:PYTHONPATH = "src"
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-## Estado actual
+En Linux o macOS:
 
-Los logs de ejemplo ya fueron ubicados en `data/input/`. La CLI procesa todos
-los resultados de `resetuser`, traduce las reglas de ADManager y actualiza el
-CSV idempotente por fecha.
-
-## Estructura
-
-```text
-src/reporte_bot/  # Código fuente del programa.
-tests/            # Pruebas automatizadas.
-data/input/       # Logs de entrada (ignorados por Git).
-data/output/      # CSV generado (ignorado por Git).
-notebooks/        # Exploración opcional; no ejecuta el proceso principal.
+```bash
+uv run ruff check src tests
+PYTHONPATH=src uv run python -m unittest discover -s tests -v
 ```
+
+Las pruebas cubren la normalizacion de texto, la lectura de logs, la informacion de ADManager, las reglas de `resetuser`, la escritura idempotente del CSV y la ejecucion completa desde la linea de comandos.
+
+## Decisiones principales
+
+- Los logs y el CSV generado estan ignorados por Git porque pueden contener datos sensibles y se regeneran localmente.
+- Las comparaciones de texto se hacen sin mayusculas ni signos diacriticos para evitar diferencias por formato.
+- Las reglas de `resetuser` estan separadas del resto del pipeline para que sean mas faciles de revisar y ampliar.
+- El encabezado del CSV se valida antes de agregar datos para evitar mezclar reportes con una estructura distinta.

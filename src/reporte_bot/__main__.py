@@ -12,7 +12,7 @@ NOMBRE_REPORTE = "tabla_reporte_bot.csv"
 
 
 def main(argumentos: Sequence[str] | None = None) -> int:
-    """Procesa el log indicado y muestra cuántas filas nuevas agregó."""
+    """Procesa el log indicado y muestra cuantas filas nuevas agrego."""
     parser = argparse.ArgumentParser(
         description="Genera el reporte de reseteos para una fecha."
     )
@@ -30,7 +30,7 @@ def main(argumentos: Sequence[str] | None = None) -> int:
 
     ruta_log = RAIZ_PROYECTO / "data" / "input" / f"{fecha.isoformat()}.log"
     if not ruta_log.is_file():
-        parser.error(f"No se encontró el log: {ruta_log.name}")
+        parser.error(f"No se encontro el log: {ruta_log.name}")
 
     ruta_csv = RAIZ_PROYECTO / "data" / "output" / NOMBRE_REPORTE
     filas_nuevas = procesar_archivo(ruta_log, ruta_csv)

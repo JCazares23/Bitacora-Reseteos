@@ -17,7 +17,7 @@ COLUMNAS_REPORTE = (
     "timestamp",
     "solicitante",
     "target",
-    "acción",
+    "accion",
     "sistema",
     "nombre completo del usuario solicitante",
     "nombre completo del usuario target",
@@ -46,7 +46,7 @@ class RegistroResetUser:
             "timestamp": self.timestamp,
             "solicitante": self.solicitante,
             "target": self.target,
-            "acción": "reseteo de contraseña",
+            "accion": "reseteo de contrasena",
             "sistema": "ADManager",
             "nombre completo del usuario solicitante": self.nombre_solicitante,
             "nombre completo del usuario target": self.nombre_target,
@@ -57,7 +57,7 @@ class RegistroResetUser:
 
 
 def extraer_registro(eventos: Iterable[EventoLog]) -> RegistroResetUser | None:
-    """Construye una fila para una operación de reseteo encontrada en el log."""
+    """Construye una fila para una operacion de reseteo encontrada en el log."""
     eventos_lista = list(eventos)
     solicitud = next(
         (
@@ -100,9 +100,9 @@ def _crear_resultado(
     target: UsuarioADManager | None,
     eventos: Iterable[EventoLog],
 ) -> str:
-    """Traduce el código y los datos de ADManager a un mensaje útil."""
+    """Traduce el codigo y los datos de ADManager a un mensaje util."""
     if codigo == "200":
-        return "El reseteo de contraseña se realizó correctamente en ADManager."
+        return "El reseteo de contrasena se realizo correctamente en ADManager."
     if codigo == "202":
         return (
             "El usuario objetivo pertenece a Corporativo y no puede resetearse "
@@ -120,29 +120,29 @@ def _crear_resultado(
         return "El reseteo fue rechazado por una regla de permisos."
     if codigo == "404":
         if not solicitante and not target:
-            return "Ningún usuario se encontró en ADManager."
+            return "Ningun usuario se encontro en ADManager."
         if not solicitante:
-            return "El usuario solicitante no se encontró en ADManager."
-        return "El usuario objetivo no se encontró en ADManager."
+            return "El usuario solicitante no se encontro en ADManager."
+        return "El usuario objetivo no se encontro en ADManager."
     if codigo == "429":
         return (
             "No se pudo ejecutar el reseteo porque se agotaron los tokens de "
             "ADManager."
         )
     if codigo == "500":
-        return "Ocurrió un error interno inesperado al procesar el reseteo."
+        return "Ocurrio un error interno inesperado al procesar el reseteo."
     if codigo == "503":
         detalle = _mensaje_admanager(eventos)
         if detalle:
             return f"ADManager no pudo ejecutar el reseteo: {detalle}"
         return "ADManager no pudo ejecutar el reseteo."
     if codigo == "504":
-        return "La comunicación con ADManager excedió el tiempo de espera."
-    return f"El reseteo terminó con un resultado no reconocido: {codigo}."
+        return "La comunicacion con ADManager excedio el tiempo de espera."
+    return f"El reseteo termino con un resultado no reconocido: {codigo}."
 
 
 def _valor(patron: re.Pattern[str], texto: str) -> str | None:
-    """Obtiene un valor nombrado de una expresión regular."""
+    """Obtiene un valor nombrado de una expresion regular."""
     coincidencia = patron.search(texto)
     if not coincidencia:
         return None
@@ -152,17 +152,17 @@ def _valor(patron: re.Pattern[str], texto: str) -> str | None:
 
 
 def _nombre(usuario: UsuarioADManager | None) -> str:
-    """Devuelve el nombre completo o una cadena vacía si no existe perfil."""
+    """Devuelve el nombre completo o una cadena vacia si no existe perfil."""
     return usuario.nombre_completo if usuario else ""
 
 
 def _oficina(usuario: UsuarioADManager | None) -> str:
-    """Devuelve la oficina o una cadena vacía si no existe perfil."""
+    """Devuelve la oficina o una cadena vacia si no existe perfil."""
     return usuario.oficina if usuario else ""
 
 
 def _mensaje_admanager(eventos: Iterable[EventoLog]) -> str | None:
-    """Obtiene el detalle exacto que ADManager devolvió en un error 503."""
+    """Obtiene el detalle exacto que ADManager devolvio en un error 503."""
     for evento in eventos:
         if "ADM-Raw response" in evento.mensaje:
             coincidencia = PATRON_MENSAJE_ADMANAGER.search(evento.mensaje)
