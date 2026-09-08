@@ -1,7 +1,7 @@
 # Datos de entrada y resultados: no deben publicarse en GitHub.
-data/raw/*
+data/input/*
 data/output/*
-!data/raw/.gitkeep
+!data/input/.gitkeep
 !data/output/.gitkeep
 *.log
 *.pdf

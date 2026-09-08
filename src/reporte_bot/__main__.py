@@ -28,7 +28,7 @@ def main(argumentos: Sequence[str] | None = None) -> int:
     except ValueError:
         parser.error("--fecha debe tener el formato AAAA-MM-DD.")
 
-    ruta_log = RAIZ_PROYECTO / "data" / "raw" / f"{fecha.isoformat()}.log"
+    ruta_log = RAIZ_PROYECTO / "data" / "input" / f"{fecha.isoformat()}.log"
     if not ruta_log.is_file():
         parser.error(f"No se encontró el log: {ruta_log.name}")
 
