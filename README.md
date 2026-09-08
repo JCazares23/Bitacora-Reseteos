@@ -54,12 +54,35 @@ procesar el mismo archivo más de una vez conserva el mismo reporte.
 No se incluirán todavía una base de datos, interfaz gráfica, envío de correos
 ni un reporte de errores separado. Podrán añadirse después si son necesarios.
 
+## Uso
+
+Desde la raíz del proyecto, indique la fecha del archivo que desea procesar:
+
+```powershell
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m reporte_bot --fecha 2026-09-01
+```
+
+El comando busca `data/raw/2026-09-01.log` y actualiza
+`data/output/tabla_reporte_bot.csv`. Si se vuelve a ejecutar con el mismo log,
+no agrega filas repetidas.
+
+## Pruebas
+
+Para comprobar el código y su formato:
+
+```powershell
+.\.venv\Scripts\ruff.exe check src tests
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
 ## Estado actual
 
 Los logs de ejemplo ya fueron ubicados en `data/raw/`, se validó el criterio
 de éxito, se creó el lector y se implementó la extracción de reseteos exitosos.
-También se creó el escritor idempotente del CSV. El siguiente paso es unir las
-piezas en un comando que procese un archivo de log completo.
+También se creó el escritor idempotente del CSV y la CLI que procesa un archivo
+completo por fecha. La primera versión del proyecto ya cumple su objetivo.
 
 ## Estructura
 
