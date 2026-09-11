@@ -4,11 +4,12 @@ import csv
 from collections.abc import Iterable
 from pathlib import Path
 
+from reporte_bot.alta_sap import RegistroAltaSap
 from reporte_bot.resetuser import COLUMNAS_REPORTE, RegistroResetUser
 
 
 def actualizar_reporte(
-    ruta_csv: str | Path, registros: Iterable[RegistroResetUser]
+    ruta_csv: str | Path, registros: Iterable[RegistroResetUser | RegistroAltaSap]
 ) -> int:
     """Agrega solo filas nuevas y devuelve cuantas escribio."""
     ruta = Path(ruta_csv)

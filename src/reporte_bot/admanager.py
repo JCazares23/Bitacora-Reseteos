@@ -9,7 +9,7 @@ from reporte_bot.lector_logs import EventoLog
 from reporte_bot.texto import normalizar
 
 PATRON_USUARIO_BUSCADO = re.compile(
-    r"sAMAccountName(?::equal:|%3Aequal%3A)(?P<usuario>[^)%\s\"]+)"
+    r"(?:sAMAccountName|employeeID)(?::equal:|%3Aequal%3A)(?P<usuario>[^)%\s\"]+)"
 )
 
 
@@ -22,6 +22,7 @@ class UsuarioADManager:
     oficina: str
     descripcion: str
     ou_name: str
+    corporativo: str
 
 
 def obtener_usuarios(eventos: Iterable[EventoLog]) -> dict[str, UsuarioADManager]:
@@ -73,4 +74,5 @@ def _crear_usuario(datos: dict[str, object]) -> UsuarioADManager:
         oficina=str(datos.get("OFFICE", "")),
         descripcion=str(datos.get("DESCRIPTION", "")),
         ou_name=str(datos.get("OU_NAME", "")),
+        corporativo=str(datos.get("CORPORATIVO", "")),
     )

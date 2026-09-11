@@ -24,3 +24,22 @@ class AccionesTests(unittest.TestCase):
         ]
 
         self.assertIsNone(procesar_operacion(eventos))
+
+    def test_procesa_una_alta_sap_registrada(self) -> None:
+        eventos = [
+            EventoLog(
+                fecha_utc="2026-09-01T12:00:00Z",
+                nivel="INFO",
+                operation_id="operacion-sap",
+                mensaje=(
+                    "HTTP Request: http://bot/users_admin/alta_sap?"
+                    "sAMAccountName_requester=administrador&"
+                    "employeeID_target=12345 HTTP/1.1 200"
+                ),
+            )
+        ]
+
+        registro = procesar_operacion(eventos)
+
+        assert registro is not None
+        self.assertEqual(registro.como_fila()["sistema"], "SAP")

@@ -4,7 +4,7 @@
 
 Este proyecto convierte los logs diarios del bot de soporte en un reporte CSV de los intentos de reseteo de contrasena realizados mediante ADManager.
 
-Por ahora solo procesa la accion `users_admin/resetuser`, pero el codigo esta separado por modulos para que en el futuro se puedan agregar nuevas acciones sin rehacer el proceso completo.
+Procesa las acciones `users_admin/resetuser` y `users_admin/alta_sap`. El codigo esta separado por modulos para poder agregar nuevas acciones sin rehacer el proceso completo.
 
 El reporte se puede ejecutar mas de una vez para una misma fecha. Si el archivo de entrada no cambia, el CSV final tampoco cambia. Si un log historico se corrige, al ejecutarlo de nuevo solo se agregan registros que aun no existian en el reporte.
 
@@ -18,6 +18,7 @@ src/
     lector_logs.py    # Lee el log y agrupa eventos por operacion
     admanager.py      # Extrae datos utiles de las respuestas de ADManager
     resetuser.py      # Convierte una operacion resetuser en una fila del reporte
+    alta_sap.py       # Convierte una operacion alta_sap en una fila del reporte
     reporte_csv.py    # Valida, combina y guarda el CSV sin duplicados
     texto.py          # Normaliza texto antes de compararlo
 tests/                # Pruebas unitarias y de integracion
@@ -50,18 +51,15 @@ Por ejemplo, para procesar el 1 de septiembre de 2026, el archivo debe llamarse 
 
 ## Ejecutar el reporte
 
-En Windows PowerShell:
-
-```powershell
-$env:PYTHONPATH = "src"
-.\.venv\Scripts\python.exe -m reporte_bot --fecha 2026-09-01
-```
-
-En Linux o macOS:
+Desde la raiz del proyecto, en cualquier sistema operativo:
 
 ```bash
-PYTHONPATH=src uv run python -m reporte_bot --fecha 2026-09-01
+uv run reporte-bot --fecha 2026-09-01
 ```
+
+`uv sync` instala este comando al preparar el proyecto. En Windows tambien se
+puede ejecutar directamente como `\.venv\Scripts\reporte-bot.exe --fecha
+2026-09-01`.
 
 El resultado se guarda en `data/output/tabla_reporte_bot.csv`. La fecha es obligatoria para que quede claro que log se esta procesando.
 
@@ -82,7 +80,7 @@ oficina del usuario target
 resultado
 ```
 
-La columna `resultado` usa mensajes entendibles para una persona. El proyecto interpreta los codigos de respuesta del bot y los datos encontrados en ADManager para explicar si el reseteo fue exitoso, si faltaba algun usuario, si no habia permisos, si hubo limite de intentos o si ocurrio otro problema.
+La columna `resultado` usa mensajes entendibles para una persona. El proyecto interpreta los codigos de respuesta del bot y los datos encontrados en ADManager para explicar si un reseteo o alta SAP fue exitoso, si faltaba algun usuario, si no habia permisos o si ocurrio otro problema.
 
 ## Por que no se duplican filas
 
